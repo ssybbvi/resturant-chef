@@ -1,143 +1,85 @@
 import React from "react";
-import {
-  Flex,
-  WhiteSpace,
-  ActivityIndicator,
-  NavBar,
-  Icon,
-  PlaceHolder
-} from "antd-mobile";
+import { ActivityIndicator, NavBar, Icon, Checkbox, Toast } from "antd-mobile";
 import { Link } from "react-router-dom";
-import "./Index.css";
+import axios from "../../webapi/index";
 
-const data = [
-  {
-    value: "1",
-    label: "Food",
-    children: [
-      {
-        label: "American Foods",
-        value: "1",
-        disabled: false
-      },
-      {
-        label: "Chinese Food",
-        value: "2"
-      },
-      {
-        label: "Hot Pot",
-        value: "3"
-      },
-      {
-        label: "Buffet",
-        value: "4"
-      },
-      {
-        label: "Fast Food",
-        value: "5"
-      },
-      {
-        label: "Snack",
-        value: "6"
-      },
-      {
-        label: "Bread",
-        value: "7"
-      },
-      {
-        label: "Fruit",
-        value: "8"
-      },
-      {
-        label: "Noodle",
-        value: "9"
-      },
-      {
-        label: "Leisure Food",
-        value: "10"
-      }
-    ]
-  },
-  {
-    value: "2",
-    label: "Supermarket",
-    children: [
-      {
-        label: "All Supermarkets",
-        value: "1"
-      },
-      {
-        label: "Supermarket",
-        value: "2",
-        disabled: true
-      },
-      {
-        label: "C-Store",
-        value: "3"
-      },
-      {
-        label: "Personal Care",
-        value: "4"
-      }
-    ]
-  },
-  {
-    value: "3",
-    label: "Extra",
-    isLeaf: true,
-    children: [
-      {
-        label: "you can not see",
-        value: "1"
-      }
-    ]
-  }
-];
+const CheckboxItem = Checkbox.CheckboxItem;
 
-export default class SetProductStock extends React.Component {
+export default class SetPriorityProduct extends React.Component {
   constructor(...args) {
     super(...args);
     this.state = {
-      initData: data,
+      initData: [],
       show: false,
-      currentSelectId: ""
+      currentSelectId: "",
+      chefProductIds: []
     };
+
+    this.loadChefLikeProduct();
   }
-  onChange = value => {
-    console.log(value);
-  };
-  onOk = value => {
-    console.log(value);
-    this.onCancel();
-  };
-  onCancel = () => {
-    this.setState({ show: false });
-  };
-  handleClick = e => {
-    e.preventDefault(); // Fix event propagation on Android
-    this.setState({
-      show: !this.state.show
+
+  loadChefLikeProduct = () => {
+    let self = this;
+    Promise.all([
+      axios.get("/user/getChefProduct", { params: { userId: "1" } }),
+      axios.get("/productType"),
+      axios.get("/product")
+    ]).then(([getChefProductResolve, productTypeResolve, productResolve]) => {
+      let chefProductIds = getChefProductResolve.data.data;
+      let productTypeList = productTypeResolve.data.data;
+      let productList = productResolve.data.data;
+
+      let result = productTypeList.map(productTypeItem => {
+        let childProductList = productList.filter(f =>
+          f.label.some(s => s === productTypeItem.name)
+        );
+        return {
+          name: productTypeItem.name,
+          children: childProductList.map(item => {
+            return {
+              _id: item._id,
+              name: item.name
+            };
+          })
+        };
+      });
+
+      self.setState({
+        chefProductIds: chefProductIds,
+        initData: result,
+        show: true
+      });
     });
-    // mock for async data loading
-    if (!this.state.initData) {
-      setTimeout(() => {
-        this.setState({
-          initData: data
-        });
-      }, 500);
-    }
   };
 
-  onMaskClick = () => {
+  onProductSelected(productId) {
+    let chefProductIds = this.state.chefProductIds;
+    let index = chefProductIds.findIndex(s => s === productId);
+    if (index > -1) {
+      chefProductIds.splice(index, 1);
+    } else {
+      chefProductIds.push(productId);
+    }
     this.setState({
-      show: false
+      chefProductIds: chefProductIds
     });
+  }
+
+  save = () => {
+    axios
+      .post("/user/setChefProduct", {
+        userId: "1",
+        likeProductIds: this.state.chefProductIds
+      })
+      .then(() => {
+        Toast.success("保存成功!!", 1);
+      });
   };
 
   render() {
     const { initData, show } = this.state;
     const childrenNode = initData.find(
-      f => f.value == this.state.currentSelectId
+      f => f.name == this.state.currentSelectId
     ) || { children: [] };
 
     const loadingEl = (
@@ -153,51 +95,71 @@ export default class SetProductStock extends React.Component {
         <ActivityIndicator size="large" />
       </div>
     );
+
+    const levelMenu = (
+      <div className="self-menu">
+        <div className="self-menu-left">
+          <div className="self-menu-left-list">
+            {initData.map(item => {
+              return (
+                <div
+                  className={
+                    this.state.currentSelectId === item.name ? "selected" : ""
+                  }
+                  key={item.name}
+                  onClick={() => {
+                    this.setState({ currentSelectId: item.name });
+                  }}
+                >
+                  {item.name}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="self-menu-right">
+          <div className="self-menu-right-list">
+            {childrenNode.children.map(item => {
+              return (
+                <div
+                  key={item._id}
+                  onClick={() => this.onProductSelected(item._id)}
+                >
+                  <CheckboxItem
+                    checked={this.state.chefProductIds.some(
+                      s => s === item._id
+                    )}
+                  >
+                    {item.name}
+                  </CheckboxItem>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+
     return (
       <div>
         <NavBar
           leftContent={[
-            <Link to="/">
-              <Icon key="1" type="left" />
+            <Link key="100" to="/">
+              <Icon type="left" />
             </Link>
           ]}
           mode="light"
-          onLeftClick={this.handleClick}
+          rightContent={[
+            <div key="0788" onClick={this.save}>
+              确定
+            </div>
+          ]}
           className="multi-top-nav-bar"
         >
-          Multi select menu
+          设置您负责的菜品
         </NavBar>
 
-        <div className="self-menu">
-          <div className="self-menu-left">
-            <div className="self-menu-left-list">
-              {initData.map(item => {
-                return (
-                  <div
-                    className={
-                      this.state.currentSelectId === item.value
-                        ? "selected"
-                        : ""
-                    }
-                    key={item.value}
-                    onClick={() => {
-                      this.setState({ currentSelectId: item.value });
-                    }}
-                  >
-                    {item.label}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <div className="self-menu-right">
-            <div className="self-menu-right-list">
-              {childrenNode.children.map(item => {
-                return <div key={item.value}>{item.label}</div>;
-              })}
-            </div>
-          </div>
-        </div>
+        {show ? levelMenu : loadingEl}
       </div>
     );
   }
