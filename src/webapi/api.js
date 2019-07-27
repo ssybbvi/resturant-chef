@@ -1,11 +1,5 @@
-import openSocket from 'socket.io-client';
-const socket = openSocket('http://localhost:3000');
+import io from 'socket.io-client';
 
-function subscribeToWaitCookQueues(cb) {
-    socket.on('orderItemQueue', (data) => {
-        cb(null, data)
-    });
+export let subscriptionSocket = (eventName, cb) => {
+    io('http://localhost:3000').on(eventName, cb);
 }
-export {
-    subscribeToWaitCookQueues
-};

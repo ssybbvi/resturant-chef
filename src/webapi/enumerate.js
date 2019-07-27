@@ -14,7 +14,9 @@ export let productStatus = {
     normal: 1,
     waitCooking: 2,
     cooking: 3,
-    finish: 4
+    finish: 4,
+    transporting: 5,
+    transportFinish: 6
 }
 export let userType = {
     admin: 0,

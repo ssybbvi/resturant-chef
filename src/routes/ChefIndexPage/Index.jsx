@@ -48,12 +48,12 @@ export default class IndexPage extends React.Component {
           王小二
         </NavBar>
         {this.state.isWork ? (
-          <List renderHeader={() => "描述语句"} className="my-list">
+          <List renderHeader={() => "好好工作，天天向上"} className="my-list">
+            <Link to="/chefWorkSpace">
+              <Item arrow="horizontal">工作区</Item>
+            </Link>
             <Link to="/setProductStock">
               <Item arrow="horizontal">设置菜品数量</Item>
-            </Link>
-            <Link to="/workSpace">
-              <Item arrow="horizontal">工作区</Item>
             </Link>
             <Link to="/setPriorityProduct">
               <Item arrow="horizontal">设置优先负责的菜品</Item>
