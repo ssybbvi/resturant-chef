@@ -19,12 +19,21 @@ export default class IndexPage extends React.Component {
   render() {
     return (
       <div>
-        <NavBar mode="light">王小二</NavBar>
+        <NavBar
+          leftContent={[
+            <Link key="1" to="/">
+              <Icon type="left" />
+            </Link>
+          ]}
+          mode="light"
+        >
+          马云
+        </NavBar>
         <List renderHeader={() => "好好工作，天天向上"} className="my-list">
-          <Link to="/waiterWorkSpace">
+          <Link to="/waiterWorkSpace" key="waiterWorkSpace">
             <Item arrow="horizontal">工作区</Item>
           </Link>
-          <Link to="/setProductStock">
+          <Link to="/setProductStock" key="setProductStock">
             <Item arrow="horizontal">设置菜品数量</Item>
           </Link>
         </List>

@@ -32,27 +32,41 @@ export default class IndexPage extends React.Component {
       tableMode: tableMode.prepareTransportOrderItemList
     };
 
-    subscriptionSocket("transportingOrderItem", () => {
-      this.loadPrepareTransportOrderItem();
-      this.loadWaiterTransportOrderItem();
-    });
+    this.destroySocketList = [];
 
-    subscriptionSocket("cancelTransportOrderItem", () => {
-      this.loadPrepareTransportOrderItem();
-      this.loadWaiterTransportOrderItem();
-    });
+    this.destroySocketList.push(
+      subscriptionSocket("transportingOrderItem", () => {
+        this.loadPrepareTransportOrderItem();
+        this.loadWaiterTransportOrderItem();
+      })
+    );
 
-    subscriptionSocket("finishOrderItem", () => {
-      this.loadPrepareTransportOrderItem();
-    });
+    this.destroySocketList.push(
+      subscriptionSocket("cancelTransportOrderItem", () => {
+        this.loadPrepareTransportOrderItem();
+        this.loadWaiterTransportOrderItem();
+      })
+    );
 
-    subscriptionSocket("transportedOrderItem", () => {
-      this.loadPrepareTransportOrderItem();
-      this.loadWaiterTransportOrderItem();
-    });
+    this.destroySocketList.push(
+      subscriptionSocket("finishOrderItem", () => {
+        this.loadPrepareTransportOrderItem();
+      })
+    );
+
+    this.destroySocketList.push(
+      subscriptionSocket("transportedOrderItem", () => {
+        this.loadPrepareTransportOrderItem();
+        this.loadWaiterTransportOrderItem();
+      })
+    );
 
     this.loadPrepareTransportOrderItem();
     this.loadWaiterTransportOrderItem();
+  }
+
+  componentWillUnmount() {
+    this.destroySocketList.forEach(item => item());
   }
 
   loadPrepareTransportOrderItem = () => {
@@ -114,7 +128,7 @@ export default class IndexPage extends React.Component {
                   onPress: () => {
                     this.cancelTransportOrderItem(item._id);
                   },
-                  style: { color: "#8e44ad" }
+                  style: { backgroundColor: "#8e44ad", color: "white" }
                 }
               ]}
             >
@@ -147,6 +161,9 @@ export default class IndexPage extends React.Component {
             <Item>
               <Flex justify="between" style={{ color: "#8e44ad" }}>
                 ({item.tableName}){item.name}
+                {item.isBale ? (
+                  <span style={{ color: "#f39c12" }}>(打包)</span>
+                ) : null}
                 <CheckboxItem
                   checked={!!item.waiterId}
                   onClick={() => {
@@ -167,7 +184,16 @@ export default class IndexPage extends React.Component {
 
     return (
       <div>
-        <NavBar mode="light">工作区</NavBar>
+        <NavBar
+          leftContent={[
+            <Link key="1" to="/waiter">
+              <Icon type="left" />
+            </Link>
+          ]}
+          mode="light"
+        >
+          工作区
+        </NavBar>
         <Tabs
           tabs={[
             {

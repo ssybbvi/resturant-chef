@@ -2,13 +2,16 @@ import axios from "axios"
 import {
     getToken
 } from "./tool"
-
+import {
+    Toast
+} from "antd-mobile";
 // import {
 //     promised
 // } from "q";
 
+
 const DevBaseUrl = "http://localhost:3000"
-const ProdBashUrl = DevBaseUrl
+const ProdBashUrl = "http://35.236.174.214:3000"
 
 let config = {
     baseURL: process.env.NODE_ENV !== "production" ? DevBaseUrl : ProdBashUrl // 配置API接口地址
@@ -46,7 +49,7 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(function (response) {
     if (response.data.result === false) {
-        console.error(response.data.data)
+        Toast.fail(response.data.data, 2);
         return Promise.reject(response.data.data)
     }
     return Promise.resolve(response);

@@ -39,6 +39,11 @@ export default class IndexPage extends React.Component {
       <div>
         <NavBar
           mode="light"
+          leftContent={[
+            <Link key="1" to="/">
+              <Icon type="left" />
+            </Link>
+          ]}
           rightContent={[
             <div key="1" onClick={() => this.chefUpdateWork()}>
               {this.state.isWork ? "工作中" : "休息中"}
@@ -49,13 +54,13 @@ export default class IndexPage extends React.Component {
         </NavBar>
         {this.state.isWork ? (
           <List renderHeader={() => "好好工作，天天向上"} className="my-list">
-            <Link to="/chefWorkSpace">
+            <Link to="/chefWorkSpace" kye="chefWorkSpace">
               <Item arrow="horizontal">工作区</Item>
             </Link>
-            <Link to="/setProductStock">
+            <Link to="/setProductStock" kye="setProductStock">
               <Item arrow="horizontal">设置菜品数量</Item>
             </Link>
-            <Link to="/setPriorityProduct">
+            <Link to="/setPriorityProduct" kye="setPriorityProduct">
               <Item arrow="horizontal">设置优先负责的菜品</Item>
             </Link>
           </List>

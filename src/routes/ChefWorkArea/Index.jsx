@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Tabs,
   WhiteSpace,
@@ -43,36 +43,60 @@ export default class WorkArea extends React.Component {
       height: document.documentElement.clientHeight
     };
 
-    subscriptionSocket("draggableOrderItem", () => {
-      this.fetchWaitCookQueues();
-    });
+    this.destroySocketList = [];
 
-    subscriptionSocket("orderMake", () => {
-      this.fetchWaitCookQueues();
-    });
-
-    subscriptionSocket("startCookOrderItem", orderItem => {
-      if (this.state.toBeProducedList.some(s => s._id === orderItem._id)) {
+    this.destroySocketList.push(
+      subscriptionSocket("draggableOrderItem", () => {
+        console.log("draggableOrderItem");
         this.fetchWaitCookQueues();
-      }
-    });
+      })
+    );
 
-    subscriptionSocket("deleteOrderItem", orderItem => {
-      if (this.state.toBeProducedList.some(s => s._id === orderItem._id)) {
+    this.destroySocketList.push(
+      subscriptionSocket("orderMake", () => {
         this.fetchWaitCookQueues();
-      }
+      })
+    );
 
-      if (this.state.makeIngList.some(s => s._id === orderItem._id)) {
+    this.destroySocketList.push(
+      subscriptionSocket("startCookOrderItem", orderItem => {
+        if (this.state.toBeProducedList.some(s => s._id === orderItem._id)) {
+          this.fetchWaitCookQueues();
+        }
+      })
+    );
+
+    this.destroySocketList.push(
+      subscriptionSocket("deleteOrderItem", orderItem => {
+        if (this.state.toBeProducedList.some(s => s._id === orderItem._id)) {
+          this.fetchWaitCookQueues();
+        }
+
+        if (this.state.makeIngList.some(s => s._id === orderItem._id)) {
+          this.loadMakeIngList();
+        }
+      })
+    );
+
+    this.destroySocketList.push(
+      subscriptionSocket("setRemarkOrderItem", () => {
         this.loadMakeIngList();
-      }
-    });
+      })
+    );
 
-    subscriptionSocket("setRemarkOrderItem", () => {
-      this.loadMakeIngList();
-    });
+    this.destroySocketList.push(
+      subscriptionSocket("expediteOrderItem", () => {
+        console.log("expediteOrderItem");
+        this.loadMakeIngList();
+      })
+    );
 
     this.loadMakeIngList();
     this.fetchWaitCookQueues();
+  }
+
+  componentWillUnmount() {
+    this.destroySocketList.forEach(item => item());
   }
 
   loadMakeIngList = () => {
@@ -260,17 +284,20 @@ export default class WorkArea extends React.Component {
               {this.state.makeIngList.map(item => {
                 return item.status === productStatus.finish ? (
                   <Item
-                    extra="30m"
+                    extra={
+                      Number.parseInt(
+                        (Date.now() - item.orderMakeDateTime) / 1000 / 60
+                      ) + "m"
+                    }
                     align="top"
                     multipleLine
                     onClick={() => this.showActionSheet(item)}
                     key={item._id}
-                    style={{ backgroundColor: "#e74c3c" }}
                   >
-                    <span style={{ color: "white" }}>
+                    <span style={{ color: "#e74c3c" }}>
                       {item.name} ({item.tableName})
                     </span>
-                    <Brief style={{ color: "white" }}>{item.remark}</Brief>
+                    <Brief style={{ color: "#e74c3c" }}>{item.remark}</Brief>
                   </Item>
                 ) : (
                   <SwipeAction
@@ -283,19 +310,21 @@ export default class WorkArea extends React.Component {
                         style: { backgroundColor: "#e74c3c", color: "white" }
                       }
                     ]}
-                    onOpen={() => console.log("global open")}
                   >
                     <Item
-                      extra="30m"
+                      extra={
+                        Number.parseInt(
+                          (Date.now() - item.orderMakeDateTime) / 1000 / 60
+                        ) + "m"
+                      }
                       align="top"
                       multipleLine
                       onClick={() => this.showActionSheet(item)}
-                      style={{ backgroundColor: "#f1c40f" }}
                     >
-                      <span style={{ color: "white" }}>
+                      <span style={{ color: "#f1c40f" }}>
                         {item.name} ({item.tableName})
                       </span>
-                      <Brief style={{ color: "white" }}>{item.remark}</Brief>
+                      <Brief style={{ color: "#f1c40f" }}>{item.remark}</Brief>
                     </Item>
                   </SwipeAction>
                 );
@@ -316,19 +345,22 @@ export default class WorkArea extends React.Component {
                       style: { backgroundColor: "#f1c40f", color: "white" }
                     }
                   ]}
-                  onOpen={() => console.log("global open")}
                 >
                   <Item
-                    extra="30m"
+                    extra={
+                      Number.parseInt(
+                        (Date.now() - item.orderMakeDateTime) / 1000 / 60
+                      ) + "m"
+                    }
                     align="top"
                     multipleLine
                     onClick={() => this.showActionSheet(item)}
-                    style={{ backgroundColor: "#2980b9", color: "white" }}
+                    style={{ color: "#2980b9" }}
                   >
-                    <span style={{ color: "white" }}>
+                    <span style={{ color: "#2980b9" }}>
                       {item.name} ({item.tableName})
                     </span>
-                    <Brief style={{ color: "white" }}>{item.remark}</Brief>
+                    <Brief style={{ color: "#2980b9" }}>{item.remark}</Brief>
                   </Item>
                 </SwipeAction>
               );
